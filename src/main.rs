@@ -1,18 +1,31 @@
-use bevy::{app::AppExit, prelude::*};
+pub mod events;
+mod systems;
 
-mod plugins;
+pub mod enemy;
+mod player;
+pub mod score;
+pub mod star;
+
+use events::*;
+use systems::*;
+
+use enemy::EnemyPlugin;
+use player::PlayerPlugin;
+use score::ScorePlugin;
+use star::StarPlugin;
+
+use bevy::prelude::*;
+
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, plugins::game::GamePlugin))
-        .add_systems(Update, exit_game)
+        .add_plugins(DefaultPlugins)
+        .add_event::<GameOver>()
+        .add_plugin(EnemyPlugin)
+        .add_plugin(PlayerPlugin)
+        .add_plugin(ScorePlugin)
+        .add_plugin(StarPlugin)
+        .add_startup_system(spawn_camera)
+        .add_system(exit_game)
+        .add_system(handle_game_over)
         .run();
-}
-
-pub fn exit_game(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut app_exit_event_writer: EventWriter<AppExit>,
-) {
-    if keyboard_input.just_pressed(KeyCode::Escape) {
-        app_exit_event_writer.send(AppExit);
-    }
 }

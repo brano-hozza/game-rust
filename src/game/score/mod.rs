@@ -6,6 +6,10 @@ mod systems;
 use resources::*;
 use systems::*;
 
+use crate::AppState;
+
+use super::SimulationState;
+
 pub struct ScorePlugin;
 
 impl Plugin for ScorePlugin {
@@ -14,7 +18,9 @@ impl Plugin for ScorePlugin {
             .init_resource::<HighScores>()
             .add_systems(
                 Update,
-                (update_score, update_high_scores, high_scores_updated),
+                (update_score, update_high_scores, high_scores_updated)
+                    .run_if(in_state(AppState::Game))
+                    .run_if(in_state(SimulationState::Running)),
             );
     }
 }

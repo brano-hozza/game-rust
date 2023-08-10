@@ -12,8 +12,9 @@ impl Plugin for ScorePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Score>()
             .init_resource::<HighScores>()
-            .add_system(update_score)
-            .add_system(update_high_scores)
-            .add_system(high_scores_updated);
+            .add_systems(
+                Update,
+                (update_score, update_high_scores, high_scores_updated),
+            );
     }
 }

@@ -2,15 +2,14 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use super::components::Player;
+use super::PLAYER_SIZE;
+use super::PLAYER_SPEED;
 use crate::enemy::components::*;
 use crate::enemy::ENEMY_SIZE;
 use crate::events::GameOver;
 use crate::score::resources::*;
 use crate::star::components::Star;
 use crate::star::STAR_SIZE;
-
-pub const PLAYER_SPEED: f32 = 500.0;
-pub const PLAYER_SIZE: f32 = 64.0; // This is the player sprite size.
 
 pub fn spawn_player(
     mut commands: Commands,
@@ -95,8 +94,6 @@ pub fn enemy_hit_player(
     mut game_over_event_writer: EventWriter<GameOver>,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     enemy_query: Query<&Transform, With<Enemy>>,
-    asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
     score: Res<Score>,
 ) {
     if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
@@ -108,8 +105,6 @@ pub fn enemy_hit_player(
             let enemy_radius = ENEMY_SIZE / 2.0;
             if distance < player_radius + enemy_radius {
                 println!("Enemy hit player! Game Over!");
-                let sound_effect = asset_server.load("audio/explosionCrunch_000.ogg");
-                audio.play(sound_effect);
                 commands.entity(player_entity).despawn();
                 game_over_event_writer.send(GameOver { score: score.value });
             }
@@ -121,8 +116,6 @@ pub fn player_hit_star(
     mut commands: Commands,
     player_query: Query<&Transform, With<Player>>,
     star_query: Query<(Entity, &Transform), With<Star>>,
-    asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
     mut score: ResMut<Score>,
 ) {
     if let Ok(player_transform) = player_query.get_single() {
@@ -134,8 +127,6 @@ pub fn player_hit_star(
             if distance < PLAYER_SIZE / 2.0 + STAR_SIZE / 2.0 {
                 println!("Player hit star!");
                 score.value += 1;
-                let sound_effect = asset_server.load("audio/laserLarge_000.ogg");
-                audio.play(sound_effect);
                 commands.entity(star_entity).despawn();
             }
         }

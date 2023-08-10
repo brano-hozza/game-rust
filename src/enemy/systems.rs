@@ -53,7 +53,6 @@ pub fn update_enemy_direction(
     for (transform, mut enemy) in enemy_query.iter_mut() {
         let translation = transform.translation;
         if translation.x < x_min || translation.x > x_max {
-            println!("Should change");
             enemy.direction.x *= -1.0;
         }
         if translation.y < y_min || translation.y > y_max {

@@ -125,10 +125,15 @@ pub fn player_hit_star(
                 .distance(star_transform.translation);
 
             if distance < PLAYER_SIZE / 2.0 + STAR_SIZE / 2.0 {
-                println!("Player hit star!");
                 score.value += 1;
                 commands.entity(star_entity).despawn();
             }
         }
+    }
+}
+
+pub fn despawn_player(mut commands: Commands, mut player_query: Query<Entity, With<Player>>) {
+    if let Ok(player) = player_query.get_single_mut() {
+        commands.entity(player).despawn();
     }
 }

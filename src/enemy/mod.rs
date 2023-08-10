@@ -18,13 +18,13 @@ impl Plugin for EnemyPlugin {
         app.init_resource::<EnemySpawnTimer>()
             .add_systems(Startup, spawn_enemies)
             .add_systems(
-                First,
+                Update,
                 (
-                    enemy_movement,
-                    update_enemy_direction,
+                    enemy_movement.before(update_enemy_direction),
+                    update_enemy_direction.before(confine_enemy_movement),
                     confine_enemy_movement,
                     tick_enemy_spawn_timer,
-                    spawn_enemies_over_time,
+                    spawn_enemies_over_time.before(enemy_movement),
                 ),
             );
     }

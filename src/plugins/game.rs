@@ -27,7 +27,7 @@ impl Plugin for GamePlugin {
                 enemy::confine_enemy_movement,
             ),
         )
-        .add_systems(Update, player_hit_enemy);
+        .add_systems(Update, (player_hit_enemy, player_hit_star));
     }
 }
 
@@ -53,6 +53,25 @@ fn player_hit_enemy(
             let enemy_radius = enemy::ENEMY_SIZE / 2.;
             if distance < player_radius + enemy_radius {
                 commands.entity(player_entity).despawn();
+            }
+        }
+    }
+}
+
+fn player_hit_star(
+    mut commands: Commands,
+    mut player_query: Query<&Transform, With<player::Player>>,
+    star_query: Query<(Entity, &Transform), With<star::Star>>,
+) {
+    if let Ok(player_transform) = player_query.get_single_mut() {
+        for (start_entity, star_transform) in star_query.iter() {
+            let distance = star_transform
+                .translation
+                .distance(player_transform.translation);
+            let player_radius = player::PLAYER_SIZE / 2.;
+            let star_radius = star::STAR_SIZE / 2.;
+            if distance < player_radius + star_radius {
+                commands.entity(start_entity).despawn();
             }
         }
     }

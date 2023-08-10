@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::plugins::resources::score::Score;
+use crate::plugins::{events::GameOver, resources::score::Score};
 
 use super::{
     enemy::{Enemy, ENEMY_SIZE},
@@ -91,6 +91,8 @@ pub fn player_hit_enemy(
     mut commands: Commands,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     enemy_query: Query<&Transform, With<Enemy>>,
+    mut game_over_writer: EventWriter<GameOver>,
+    score: Res<Score>,
 ) {
     if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
         for enemy_transform in enemy_query.iter() {
@@ -101,6 +103,7 @@ pub fn player_hit_enemy(
             let enemy_radius = ENEMY_SIZE / 2.;
             if distance < player_radius + enemy_radius {
                 commands.entity(player_entity).despawn();
+                game_over_writer.send(GameOver { score: score.value });
             }
         }
     }

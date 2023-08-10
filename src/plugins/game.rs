@@ -1,6 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use super::entities::{enemy, player, star};
+use super::events::{self, GameOver};
 use super::resources::{score, timers};
 
 pub struct GamePlugin;
@@ -8,8 +9,10 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<score::Score>()
+            .init_resource::<score::HighScores>()
             .init_resource::<timers::StarSpawnTimer>()
             .init_resource::<timers::EnemySpawnTimer>()
+            .add_event::<events::GameOver>()
             .add_systems(
                 Startup,
                 (
@@ -43,7 +46,8 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (star::spawn_start_over_time, enemy::spawn_enemy_over_time),
-            );
+            )
+            .add_systems(Update, (handle_game_over, score::update_high_scores));
     }
 }
 
@@ -53,4 +57,10 @@ fn spawn_camera(mut commands: Commands, windows: Query<&Window, With<PrimaryWind
         transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 1.),
         ..default()
     });
+}
+
+pub fn handle_game_over(mut game_over_events: EventReader<GameOver>) {
+    for event in game_over_events.iter() {
+        println!("Your final score is: {}!", event.score);
+    }
 }

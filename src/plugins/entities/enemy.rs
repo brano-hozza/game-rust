@@ -1,5 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
+use crate::plugins::resources::timers::EnemySpawnTimer;
+
 const NUMBER_OF_ENEMIES: usize = 10;
 const ENEMY_SPEED: f32 = 100.;
 pub const ENEMY_SIZE: f32 = 32.;
@@ -94,5 +96,34 @@ pub fn confine_enemy_movement(
         }
 
         transform.translation = translation;
+    }
+}
+
+pub fn spawn_enemy_over_time(
+    mut commands: Commands,
+    enemy_spawn_timer: Res<EnemySpawnTimer>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>,
+) {
+    if enemy_spawn_timer.timer.finished() {
+        let window = windows.get_single().unwrap();
+        let enemy_width = ENEMY_SIZE / 2.;
+        let enemy_height = ENEMY_SIZE / 2.;
+        let random_x = rand::random::<f32>() * (window.width() - ENEMY_SIZE) + enemy_width;
+        let random_y = rand::random::<f32>() * (window.height() - ENEMY_SIZE) + enemy_height;
+        commands.spawn((
+            Enemy {
+                direction: Vec2 {
+                    x: rand::random::<f32>(),
+                    y: rand::random::<f32>(),
+                }
+                .normalize(),
+            },
+            SpriteBundle {
+                transform: Transform::from_xyz(random_x, random_y, 0.),
+                texture: asset_server.load("sprites/ball_red_small.png"),
+                ..default()
+            },
+        ));
     }
 }

@@ -1,33 +1,49 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
 use super::entities::{enemy, player, star};
+use super::resources::{score, timers};
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Startup,
-            (
-                spawn_camera,
-                player::spawn_player,
-                enemy::spawn_enemies,
-                star::spawn_stars,
-            ),
-        )
-        .add_systems(
-            First,
-            (player::move_player, player::confine_player_movement),
-        )
-        .add_systems(
-            First,
-            (
-                enemy::move_enemy,
-                enemy::update_enemy_direction,
-                enemy::confine_enemy_movement,
-            ),
-        )
-        .add_systems(Update, (player_hit_enemy, player_hit_star));
+        app.init_resource::<score::Score>()
+            .init_resource::<timers::StarSpawnTimer>()
+            .init_resource::<timers::EnemySpawnTimer>()
+            .add_systems(
+                Startup,
+                (
+                    spawn_camera,
+                    player::spawn_player,
+                    enemy::spawn_enemies,
+                    star::spawn_stars,
+                ),
+            )
+            .add_systems(PreUpdate, timers::update_timers)
+            .add_systems(
+                First,
+                (player::move_player, player::confine_player_movement),
+            )
+            .add_systems(
+                First,
+                (
+                    enemy::move_enemy,
+                    enemy::update_enemy_direction,
+                    enemy::confine_enemy_movement,
+                ),
+            )
+            .add_systems(
+                Update,
+                (
+                    player::player_hit_enemy,
+                    player::player_hit_star,
+                    score::update_score,
+                ),
+            )
+            .add_systems(
+                Update,
+                (star::spawn_start_over_time, enemy::spawn_enemy_over_time),
+            );
     }
 }
 
@@ -37,42 +53,4 @@ fn spawn_camera(mut commands: Commands, windows: Query<&Window, With<PrimaryWind
         transform: Transform::from_xyz(window.width() / 2., window.height() / 2., 1.),
         ..default()
     });
-}
-
-fn player_hit_enemy(
-    mut commands: Commands,
-    mut player_query: Query<(Entity, &Transform), With<player::Player>>,
-    enemy_query: Query<&Transform, With<enemy::Enemy>>,
-) {
-    if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
-        for enemy_transform in enemy_query.iter() {
-            let distance = enemy_transform
-                .translation
-                .distance(player_transform.translation);
-            let player_radius = player::PLAYER_SIZE / 2.;
-            let enemy_radius = enemy::ENEMY_SIZE / 2.;
-            if distance < player_radius + enemy_radius {
-                commands.entity(player_entity).despawn();
-            }
-        }
-    }
-}
-
-fn player_hit_star(
-    mut commands: Commands,
-    mut player_query: Query<&Transform, With<player::Player>>,
-    star_query: Query<(Entity, &Transform), With<star::Star>>,
-) {
-    if let Ok(player_transform) = player_query.get_single_mut() {
-        for (start_entity, star_transform) in star_query.iter() {
-            let distance = star_transform
-                .translation
-                .distance(player_transform.translation);
-            let player_radius = player::PLAYER_SIZE / 2.;
-            let star_radius = star::STAR_SIZE / 2.;
-            if distance < player_radius + star_radius {
-                commands.entity(start_entity).despawn();
-            }
-        }
-    }
 }

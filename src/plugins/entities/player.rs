@@ -1,5 +1,12 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 
+use crate::plugins::resources::score::Score;
+
+use super::{
+    enemy::{Enemy, ENEMY_SIZE},
+    star::{Star, STAR_SIZE},
+};
+
 const PLAYER_SPEED: f32 = 500.;
 pub const PLAYER_SIZE: f32 = 32.;
 
@@ -77,5 +84,45 @@ pub fn confine_player_movement(
         }
 
         transform.translation = translation;
+    }
+}
+
+pub fn player_hit_enemy(
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &Transform), With<Player>>,
+    enemy_query: Query<&Transform, With<Enemy>>,
+) {
+    if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
+        for enemy_transform in enemy_query.iter() {
+            let distance = enemy_transform
+                .translation
+                .distance(player_transform.translation);
+            let player_radius = PLAYER_SIZE / 2.;
+            let enemy_radius = ENEMY_SIZE / 2.;
+            if distance < player_radius + enemy_radius {
+                commands.entity(player_entity).despawn();
+            }
+        }
+    }
+}
+
+pub fn player_hit_star(
+    mut commands: Commands,
+    mut player_query: Query<&Transform, With<Player>>,
+    star_query: Query<(Entity, &Transform), With<Star>>,
+    mut score: ResMut<Score>,
+) {
+    if let Ok(player_transform) = player_query.get_single_mut() {
+        for (start_entity, star_transform) in star_query.iter() {
+            let distance = star_transform
+                .translation
+                .distance(player_transform.translation);
+            let player_radius = PLAYER_SIZE / 2.;
+            let star_radius = STAR_SIZE / 2.;
+            if distance < player_radius + star_radius {
+                commands.entity(start_entity).despawn();
+                score.value += 1;
+            }
+        }
     }
 }
